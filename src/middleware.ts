@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -30,14 +30,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isProtected =
-    path.startsWith("/products") ||
-    path.startsWith("/dashboard") ||
-    path.startsWith("/api/products") ||
-    path.startsWith("/api/campaigns") ||
-    path.startsWith("/api/tasks");
+  const isProtectedPage =
+    path.startsWith("/products") || path.startsWith("/dashboard");
 
-  if (isProtected && !user && !path.startsWith("/api/")) {
+  if (isProtectedPage && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
@@ -48,11 +44,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/products/:path*",
-    "/dashboard/:path*",
-    "/api/products/:path*",
-    "/api/campaigns/:path*",
-    "/api/tasks/:path*",
-  ],
+  matcher: ["/products/:path*", "/dashboard/:path*"],
 };
