@@ -23,28 +23,31 @@ function SignupForm() {
     setMessage(null);
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.auth.signUp({
-        email,
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
-        options: { data: { full_name: name } },
+        options: { data: { full_name: name.trim() || undefined } },
       });
-      if (error) {
-        setError(error.message);
+      if (authError) {
+        setError(authError.message);
         setLoading(false);
         return;
       }
       if (data.session) {
         router.push(next);
         router.refresh();
-      } else {
-        setMessage("Check your email to confirm your account, then log in.");
-        setLoading(false);
+        return;
       }
+      setMessage("Check your email to confirm your account, then log in.");
+      setLoading(false);
     } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Signup failed. Try again.";
+      // Never show the old env-vars message
       setError(
-        err instanceof Error
-          ? err.message
-          : "Could not reach auth. Check Supabase project status."
+        msg.includes("Auth not configured") || msg.includes("env vars")
+          ? "Could not connect to auth service. Please try again."
+          : msg
       );
       setLoading(false);
     }
@@ -64,6 +67,7 @@ function SignupForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full h-11 px-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm"
+            autoComplete="name"
           />
           <input
             type="email"
@@ -72,6 +76,7 @@ function SignupForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full h-11 px-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm"
+            autoComplete="email"
           />
           <input
             type="password"
@@ -81,13 +86,22 @@ function SignupForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full h-11 px-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm"
+            autoComplete="new-password"
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          {message && <p className="text-sm text-green-700">{message}</p>}
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="text-sm text-green-700" role="status">
+              {message}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium"
+            className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium disabled:opacity-60"
           >
             {loading ? "Creating…" : "Sign up"}
           </button>

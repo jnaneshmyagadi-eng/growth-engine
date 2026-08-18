@@ -20,22 +20,24 @@ function LoginForm() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       });
-      if (error) {
-        setError(error.message);
+      if (authError) {
+        setError(authError.message);
         setLoading(false);
         return;
       }
       router.push(next);
       router.refresh();
     } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Login failed. Try again.";
       setError(
-        err instanceof Error
-          ? err.message
-          : "Could not reach auth. Check Supabase project status."
+        msg.includes("Auth not configured") || msg.includes("env vars")
+          ? "Could not connect to auth service. Please try again."
+          : msg
       );
       setLoading(false);
     }
@@ -56,6 +58,7 @@ function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full h-11 px-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm"
+            autoComplete="email"
           />
           <input
             type="password"
@@ -64,12 +67,17 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full h-11 px-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm"
+            autoComplete="current-password"
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium"
+            className="w-full h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Log in"}
           </button>
