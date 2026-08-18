@@ -20,7 +20,10 @@ function LoginForm() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) {
         setError(error.message);
         setLoading(false);
@@ -28,8 +31,12 @@ function LoginForm() {
       }
       router.push(next);
       router.refresh();
-    } catch {
-      setError("Auth not configured. Set NEXT_PUBLIC_SUPABASE_URL and ANON_KEY on Vercel.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not reach auth. Check Supabase project status."
+      );
       setLoading(false);
     }
   }
@@ -80,7 +87,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Loading…
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

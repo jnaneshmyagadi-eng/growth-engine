@@ -20,6 +20,7 @@ function SignupForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setMessage(null);
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signUp({
@@ -36,11 +37,15 @@ function SignupForm() {
         router.push(next);
         router.refresh();
       } else {
-        setMessage("Check your email to confirm, then log in.");
+        setMessage("Check your email to confirm your account, then log in.");
         setLoading(false);
       }
-    } catch {
-      setError("Auth not configured. Set Supabase env vars on Vercel.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not reach auth. Check Supabase project status."
+      );
       setLoading(false);
     }
   }
@@ -100,7 +105,13 @@ function SignupForm() {
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Loading…
+        </div>
+      }
+    >
       <SignupForm />
     </Suspense>
   );
