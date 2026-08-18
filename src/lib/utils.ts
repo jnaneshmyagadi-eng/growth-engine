@@ -16,13 +16,11 @@ export function isValidUrl(str: string): boolean {
 
 export function normalizeProductUrl(input: string): string {
   let url = input.trim();
-  if (!/^https?:\/\//i.test(url)) {
-    url = "https://" + url;
-  }
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
   return url;
 }
 
 export function truncate(str: string, max: number): string {
   if (str.length <= max) return str;
-  return str.slice(0, max - 1) + "…";
+  return str.slice(0, max - 1) + "\u2026";
 }
